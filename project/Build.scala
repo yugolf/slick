@@ -3,6 +3,7 @@ import Keys._
 import Tests._
 import com.typesafe.sbt.site.SphinxSupport.Sphinx
 import com.typesafe.sbt.SbtSite.site
+import com.typesafe.sbt.sdlc.Plugin._
 
 object SlickBuild extends Build {
 
@@ -98,7 +99,7 @@ object SlickBuild extends Build {
       testOnly :=  ()
     )).aggregate(slickProject, slickTestkitProject)
   lazy val slickProject = Project(id = "slick", base = file("."),
-    settings = Project.defaultSettings ++ inConfig(config("macro"))(Defaults.configSettings) ++ sharedSettings ++ fmppSettings ++ site.settings ++ site.sphinxSupport() ++ extTarget("slick", None) ++ Seq(
+    settings = Project.defaultSettings ++ sdlcSettings ++ inConfig(config("macro"))(Defaults.configSettings) ++ sharedSettings ++ fmppSettings ++ site.settings ++ site.sphinxSupport() ++ extTarget("slick", None) ++ Seq(
       name := "Slick",
       description := "Scala Language-Integrated Connection Kit",
       scalacOptions in (Compile, doc) <++= (version,sourceDirectory in Compile).map((v,src) => Seq(
@@ -112,6 +113,9 @@ object SlickBuild extends Build {
         "-diagrams", // requires graphviz
         "-groups"
       )),
+      sdlcBase := s"http://slick.typesafe.com/doc/${version.value}/api/",
+      sdlcCheckDir := (target in com.typesafe.sbt.SbtSite.SiteKeys.makeSite).value,
+      sdlc <<= sdlc dependsOn (doc in Compile, com.typesafe.sbt.SbtSite.SiteKeys.makeSite),
       test := (), // suppress test status output
       testOnly :=  (),
       ivyConfigurations += config("macro").hide.extend(Compile),
