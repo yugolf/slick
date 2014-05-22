@@ -27,6 +27,6 @@ object MTable {
       if(r.numColumns > 5) MTable(MQName.from(r), r.<<, r.<<, MQName.optionalFrom(r), r.<<, r.<<)
       else MTable(MQName.from(r), r.<<, r.<<, None, None, None)
   }
-  def getTables(namePattern: String): Invoker[MTable] = getTables(Some(""), Some(""), Some(namePattern), None)
+  def getTables(namePattern: String = null, schema: String = ""): Invoker[MTable] = getTables(Some(""), Some(schema), if (namePattern == null) None else Some(namePattern), None)
   def getTables: Invoker[MTable] = getTables(Some(""), Some(""), None, None)
 }

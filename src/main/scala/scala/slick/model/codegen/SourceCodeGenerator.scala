@@ -55,7 +55,7 @@ object SourceCodeGenerator{
   import scala.reflect.runtime.currentMirror
   def main(args: Array[String]) = {
     args.toList match {
-      case slickDriver :: jdbcDriver :: url :: outputFolder :: pkg :: tail if tail.size == 0 || tail.size == 2 => {
+      case slickDriver :: jdbcDriver :: url :: outputFolder :: pkg :: tail if tail.size == 0 || tail.size == 2 || tail.size == 3 => {
         val driver: JdbcProfile = {
           val module = currentMirror.staticModule(slickDriver)
           val reflectedModule = currentMirror.reflectModule(module)
@@ -63,12 +63,17 @@ object SourceCodeGenerator{
           driver
         }
         val db = driver.simple.Database
-        (tail match{
-          case user :: password :: Nil => db.forURL(url, driver = jdbcDriver, user=user, password=password)
+        (tail match {
+          case user :: password :: schema if schema.size == 0 || schema.size == 1 => db.forURL(url, driver = jdbcDriver, user = user, password = password)
           case Nil => db.forURL(url, driver = jdbcDriver)
           case _ => throw new Exception("This should never happen.")
-        }).withSession{ implicit session =>
-          (new SourceCodeGenerator(driver.createModel)).writeToFile(slickDriver,outputFolder,pkg)
+        }).withSession { implicit session =>
+          tail match {
+            case user :: password :: schema :: Nil =>
+              (new SourceCodeGenerator(driver.createModel(schema))).writeToFile(slickDriver, outputFolder, pkg)
+            case _ =>
+              (new SourceCodeGenerator(driver.createModel)).writeToFile(slickDriver, outputFolder, pkg)
+          }
         }
       }
       case _ => {
